@@ -120,43 +120,22 @@ jobs:
       - iac-provision
 
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-
-      - name: Install Dependencies
-        run: npm install
-        working-directory: ./app
-
-      - name: Start App in Background
+      - name: Confirm Deployment is Live at ngrok URL
         run: |
-          cd app
-          nohup npm start > app.log 2>&1 &
+          echo "Checking if app is accessible..."
           sleep 5
+          curl -s --head https://b2371aa07f7c.ngrok-free.app | head -n 1 | grep "200 OK" || {
+            echo "Deployment failed: App not reachable at Ngrok endpoint"
+            exit 1
+          }
 
-      - name: Install Ngrok
+      - name: Push Deploy Result to Prometheus
         run: |
-          curl -s https://ngrok-agent.s3.amazonaws.com/ngrok.asc | sudo tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null
-          echo "deb https://ngrok-agent.s3.amazonaws.com buster main" | sudo tee /etc/apt/sources.list.d/ngrok.list
-          sudo apt update && sudo apt install ngrok
+          cat <<EOF | curl --data-binary @- https://20e98b7e38a1.ngrok-free.app/metrics/job/devsecops_pipeline/instance/deploy
+          # TYPE deployment_status gauge
+          deployment_status{status="success"} 1
+          EOF
 
-      - name: Add Ngrok AuthToken
-        run: ngrok config add-authtoken ${{ secrets.NGROK_AUTH_TOKEN }}
-
-      - name: Start Ngrok Tunnel and Extract Public URL
-        run: |
-          nohup ngrok http 3000 > ngrok.log 2>&1 &
-          sleep 5
-          curl http://127.0.0.1:4040/api/tunnels > tunnels.json
-          export APP_URL=$(jq -r ".tunnels[0].public_url" tunnels.json)
-          echo "APP_URL=$APP_URL" >> $GITHUB_ENV
-
-      - name: Confirm Deployment
-        run: curl -I ${{ env.APP_URL }}
 
 
 
