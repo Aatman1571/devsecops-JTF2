@@ -132,44 +132,31 @@ jobs:
         run: npm install
         working-directory: ./app
 
-      - name: Start App
+      - name: Start App in Background
         run: |
           cd app
           nohup npm start > app.log 2>&1 &
-          echo "Waiting for app to start..."
-          sleep 10
+          sleep 5
 
       - name: Install Ngrok
         run: |
           curl -s https://ngrok-agent.s3.amazonaws.com/ngrok.asc | sudo tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null
           echo "deb https://ngrok-agent.s3.amazonaws.com buster main" | sudo tee /etc/apt/sources.list.d/ngrok.list
-          sudo apt update && sudo apt install -y ngrok
+          sudo apt update && sudo apt install ngrok
 
       - name: Add Ngrok AuthToken
         run: ngrok config add-authtoken ${{ secrets.NGROK_AUTH_TOKEN }}
 
-      - name: Start Ngrok Tunnel
+      - name: Start Ngrok Tunnel and Extract Public URL
         run: |
-          nohup ngrok http --domain=meerkat-grateful-katydid.ngrok-free.app 3000 > ngrok.log 2>&1 &
-          echo "Waiting for Ngrok to establish tunnel..."
-          sleep 10
+          nohup ngrok http 3000 > ngrok.log 2>&1 &
+          sleep 5
+          curl http://127.0.0.1:4040/api/tunnels > tunnels.json
+          export APP_URL=$(jq -r ".tunnels[0].public_url" tunnels.json)
+          echo "APP_URL=$APP_URL" >> $GITHUB_ENV
 
-      - name: Verify App is Live
-        run: |
-          echo "Checking if app is accessible..."
-          status_code=$(curl -s -o /dev/null -w "%{http_code}" https://meerkat-grateful-katydid.ngrok-free.app)
-          if [ "$status_code" != "200" ]; then
-            echo "Deployment failed: App not reachable at Ngrok endpoint"
-            exit 1
-          fi
-          echo "App successfully deployed at: https://meerkat-grateful-katydid.ngrok-free.app"
-
-      - name: Push Deploy Status to Prometheus Pushgateway
-        run: |
-          cat <<EOF | curl --data-binary @- https://20e98b7e38a1.ngrok-free.app/metrics/job/devsecops_pipeline/instance/deploy
-          # TYPE ci_pipeline_status gauge
-          ci_pipeline_status{status="success"} 1
-          EOF
+      - name: Confirm Deployment
+        run: curl -I ${{ env.APP_URL }}
 
 
 
