@@ -61,7 +61,7 @@ jobs:
             status="failure"
           fi
 
-          cat <<EOF | curl --data-binary @- https://20e98b7e38a1.ngrok-free.app/metrics/job=devsecops_pipeline/job_name=dependency-scan
+          cat <<EOF | curl --data-binary @- https://20e98b7e38a1.ngrok-free.app/metrics/job/devsecops_pipeline/instance/dependency-scan
           # TYPE security_scan_status gauge
           security_scan_status{status="$status"} 1
           EOF
@@ -106,7 +106,7 @@ jobs:
             status="failure"
           fi
 
-          cat <<EOF | curl --data-binary @- https://20e98b7e38a1.ngrok-free.app/metrics/job=devsecops_pipeline/job_name=dast-scan
+          cat <<EOF | curl --data-binary @- https://20e98b7e38a1.ngrok-free.app/metrics/job/devsecops_pipeline/instance/dast-scan
           # TYPE security_scan_status gauge
           security_scan_status{status="$status"} 1
           EOF
