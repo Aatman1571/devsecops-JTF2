@@ -7,6 +7,8 @@ on:
 permissions:
   contents: read
   issues: write
+  actions: write    # ✅ allow artifact uploads
+
 
 
 jobs:
@@ -65,6 +67,7 @@ jobs:
         with:
           target: 'http://localhost:3000'
           cmd_options: '-I'
+          allow_issue_writing: false
 
       - name: Upload ZAP Report
         uses: actions/upload-artifact@v4
