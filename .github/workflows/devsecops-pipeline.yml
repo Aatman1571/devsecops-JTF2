@@ -67,6 +67,7 @@ jobs:
         with:
           target: 'http://localhost:3000'
           cmd_options: '-I'
+          allow_issue_writing: false
 
       - name: List generated ZAP reports
         run: ls -lh
