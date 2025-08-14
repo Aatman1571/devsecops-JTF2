@@ -57,34 +57,30 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-test
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-      - name: Start Application
+      - name: Start App
         run: |
           cd app
-          npm install
-          nohup npm start > /dev/null 2>&1 &
-          sleep 15
+          nohup npm install && npm start &
+          sleep 10
 
-      - name: Run OWASP ZAP Full Scan (Manual)
+      - name: Pre-create report files with proper permissions
         run: |
-          docker run \
-            -v ${{ github.workspace }}:/zap/wrk/:rw \
-            --network=host \
-            ghcr.io/zaproxy/zaproxy:stable \
-            zap-full-scan.py \
-            -t http://localhost:3000 \
-            -J report_json.json \
-            -w report_md.md \
-            -r report_html.html \
-            -I
+          touch report_json.json report_md.md report_html.html
+          chmod 666 report_json.json report_md.md report_html.html
+
+      - name: Run ZAP Full Scan (Manual)
+        run: |
+          docker run -v ${{ github.workspace }}:/zap/wrk/:rw --network=host ghcr.io/zaproxy/zaproxy:stable \
+            zap-full-scan.py -t http://localhost:3000 \
+            -J report_json.json -w report_md.md -r report_html.html -I
 
       - name: Upload ZAP Scan Report
         uses: actions/upload-artifact@v4
         with:
           name: zap-report
           path: |
-            report_html.html
-            report_md.md
             report_json.json
+            report_md.md
+            report_html.html
