@@ -102,7 +102,7 @@ jobs:
         run: |
           status="success"
           # Optional: smarter logic using scan report content
-          if grep -qi "High" report_md.md; then
+          if grep -qi "FAIL" report_md.md; then
             status="failure"
           fi
 
