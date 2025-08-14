@@ -9,3 +9,14 @@ groups:
         annotations:
           summary: "High CPU Usage"
           description: "CPU usage > 75% for 1 minute on {{ $labels.instance }}"
+
+  - name: ci_pipeline_alerts
+    rules:
+      - alert: PipelineFailed
+        expr: ci_pipeline_status{status="failure"} == 1
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "CI Pipeline Failed"
+          description: "A GitHub Actions job has failed."

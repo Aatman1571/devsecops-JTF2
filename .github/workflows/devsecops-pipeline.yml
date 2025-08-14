@@ -113,3 +113,15 @@ jobs:
       - name: Apply Terraform
         run: terraform apply -auto-approve
         working-directory: ./iac/terraform
+
+      - name: Push build result to Prometheus Pushgateway
+        run: |
+          status="success"
+          if [ "${{ job.status }}" != "success" ]; then
+            status="failure"
+          fi
+
+          cat <<EOF | curl --data-binary @- https://20e98b7e38a1.ngrok-free.app/metrics/job=devsecops_pipeline/job=${{ github.job }}
+          # TYPE ci_pipeline_status gauge
+          ci_pipeline_status{status="$status"} 1
+          EOF
