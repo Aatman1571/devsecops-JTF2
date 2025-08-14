@@ -121,7 +121,8 @@ jobs:
             status="failure"
           fi
 
-          cat <<EOF | curl --data-binary @- https://20e98b7e38a1.ngrok-free.app/metrics/job=devsecops_pipeline/job=${{ github.job }}
+          cat <<EOF | curl --data-binary @- https://20e98b7e38a1.ngrok-free.app/metrics/job/devsecops_pipeline/job_name/${{ github.job }}
           # TYPE ci_pipeline_status gauge
           ci_pipeline_status{status="$status"} 1
           EOF
+
