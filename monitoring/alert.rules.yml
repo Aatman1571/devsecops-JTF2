@@ -20,3 +20,14 @@ groups:
         annotations:
           summary: "CI Pipeline Failed"
           description: "A GitHub Actions job has failed."
+
+  - name: security_scan_alerts
+    rules:  
+      - alert: SecurityScanFailed
+        expr: security_scan_status{status="failure"} == 1
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Security Scan Failed"
+          description: "One or more security scans failed in the pipeline."

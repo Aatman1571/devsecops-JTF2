@@ -53,6 +53,19 @@ jobs:
           name: dependency-check-report
           path: reports/
 
+      - name: Push Security Scan Result to Prometheus Pushgateway
+        run: |
+          status="success"
+          # Check if Dependency-Check report contains HIGH or CRITICAL vulnerabilities
+          if grep -qE 'HIGH|CRITICAL' reports/dependency-check-report.html; then
+            status="failure"
+          fi
+
+          cat <<EOF | curl --data-binary @- https://20e98b7e38a1.ngrok-free.app/metrics/job=devsecops_pipeline/job_name=dependency-scan
+          # TYPE security_scan_status gauge
+          security_scan_status{status="$status"} 1
+          EOF
+
   dast-scan:
     runs-on: ubuntu-latest
     needs: build-test
@@ -84,6 +97,19 @@ jobs:
             report_json.json
             report_md.md
             report_html.html
+
+      - name: Push Security Scan Result to Prometheus Pushgateway
+        run: |
+          status="success"
+          # Optional: smarter logic using scan report content
+          if grep -qi "High" report_md.md; then
+            status="failure"
+          fi
+
+          cat <<EOF | curl --data-binary @- https://20e98b7e38a1.ngrok-free.app/metrics/job=devsecops_pipeline/job_name=dast-scan
+          # TYPE security_scan_status gauge
+          security_scan_status{status="$status"} 1
+          EOF
 
   deploy:
     runs-on: ubuntu-latest
@@ -121,8 +147,7 @@ jobs:
             status="failure"
           fi
 
-          cat <<EOF | curl --data-binary @- https://20e98b7e38a1.ngrok-free.app/metrics/job/devsecops_pipeline/job_name/${{ github.job }}
+          cat <<EOF | curl --data-binary @- https://20e98b7e38a1.ngrok-free.app/metrics/job=devsecops_pipeline/job_name=${{ github.job }}
           # TYPE ci_pipeline_status gauge
           ci_pipeline_status{status="$status"} 1
           EOF
-
