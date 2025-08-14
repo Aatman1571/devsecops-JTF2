@@ -62,31 +62,19 @@ jobs:
           nohup npm install && npm start &
           sleep 10
       
-      - name: Upload dummy artifact
-        run: echo "test" > test.txt
-
-      - name: Upload dummy
-        uses: actions/upload-artifact@v4
-        with:
-          name: dummy-artifact
-          path: test.txt
-
-
       - name: Run OWASP ZAP
         uses: zaproxy/action-full-scan@v0.9.0
         with:
           target: 'http://localhost:3000'
           cmd_options: '-I'
           allow_issue_writing: false
-
-      - name: List generated ZAP reports
-        run: ls -lh
+          allow_artifact_upload: false
 
       - name: Upload ZAP Report
         uses: actions/upload-artifact@v4
         with:
-          name: zap-scan
+          name: zap-report
           path: |
-            ./report_html.html
-            ./report_md.md
-            ./report_json.json
+            report_html.html
+            report_md.md
+            report_json.json
