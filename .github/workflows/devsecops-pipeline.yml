@@ -124,10 +124,13 @@ jobs:
         run: |
           echo "Checking if app is accessible..."
           sleep 5
-          curl -s --head https://b2371aa07f7c.ngrok-free.app | head -n 1 | grep "200 OK" || {
+          status_code=$(curl -s -o /dev/null -w "%{http_code}" https://b2371aa07f7c.ngrok-free.app)
+          echo "HTTP status code: $status_code"
+          if [[ "$status_code" != "200" ]]; then
             echo "Deployment failed: App not reachable at Ngrok endpoint"
             exit 1
-          }
+          fi
+
 
       - name: Push Deploy Result to Prometheus
         run: |
