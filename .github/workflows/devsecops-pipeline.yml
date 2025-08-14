@@ -7,9 +7,9 @@ on:
 permissions:
   contents: read
   issues: write
-  actions: write    # ✅ allow artifact uploads
-
-
+  actions: write
+  id-token: write
+  packages: read
 
 jobs:
   build-test:
@@ -67,13 +67,10 @@ jobs:
         with:
           target: 'http://localhost:3000'
           cmd_options: '-I'
-          allow_issue_writing: false
-          artifact_name: zapreport 
 
       - name: Upload ZAP Report
         uses: actions/upload-artifact@v4
         with:
-          name: zap-report
           path: |
             report_html.html
             report_md.md
